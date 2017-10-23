@@ -14,7 +14,7 @@ using namespace std;
 int checkWord(string toBeFound,string toBeChecked);
 string readSentence(int &startPos, int delimiter);
 int ioTest();
-string readWord(int &startPos);
+void readWord(string &word1, string &word2, string &word3, string &word4, string &word5, string &word6, string &word7, string &word8);
 int extractWord(string sentence, int &index, string &output, int &runCount);
 void wordExtractionTest();
 void sentenceTokenize();
@@ -69,15 +69,9 @@ int checkWord(string toBeFound,string toBeChecked)
 	}
 }
 
-string readWord(int &startPos)
+void readWord(string &word1, string &word2, string &word3, string &word4, string &word5, string &word6, string &word7, string &word8)
 {
 	ifstream wordList;
-	string wordToFind;
-	static int charCount;
-	string fileName;
-	char c;
-
-	
 	wordList.open("words.txt");
 	if(wordList.fail())
 	{
@@ -85,21 +79,9 @@ string readWord(int &startPos)
 	}
 	else
 	{
-		wordList.clear();
-		wordList.seekg(startPos,ios::beg);
-		while(wordList.get(c),c!=10)
-		{
-			wordToFind += c;
-			charCount++;
-		}
-		
-		cout <<wordToFind<<"\n";
-		cout <<charCount<<"\n";
-		startPos = startPos + charCount;
+		wordList >> word1 >> word2 >> word3 >> word4 >> word5 >> word6 >> word7 >> word8;
 	}
-	wordList.clear();
-	wordList.ignore(10000, '\n');
-	return wordToFind;
+	wordList.close();
 }
 
 string readSentence(int &startPos,int delimiter)
@@ -110,10 +92,7 @@ string readSentence(int &startPos,int delimiter)
 	string fileName;
 	char c;
 	
-	cout<<"Please input the file name you wish to input sentences from.\n";
-	cin >> fileName;
-	
-	sentenceText.open(fileName.c_str());
+	sentenceText.open("sentences.txt");
 	if(sentenceText.fail())
 	{
 		cout<<"File could not be opened for reading. Please try again and check your filename.\n";
@@ -193,6 +172,7 @@ void writeSentence(string sentence, string filename)
 	outputFile.open(filename.c_str(),ios::app);
 	outputFile << sentence;
 	outputFile <<"."<< "\n";
+	outputFile.close();
 }
 
 	
@@ -255,39 +235,6 @@ int wordCount(string sentence)
 }
 
 						
-void FileMatchingTest(int &startPos)
-{
-	string sentence;
-	string wordtoFind;
-	string newWord;
-	string word;
-	int sentenceStart = 0;
-	int wordStart = 0;
-	int wordNum = 0;
-	int endPos = 0;
-	int newStartPos = 0;
-	sentence = readSentence(sentenceStart,46);
-	wordtoFind = readWord(wordStart);
-	int q=0;
-	for(int k=startPos; k<sentence.length();k++)
-	{		
-		extractWord(sentence, k, word, wordNum);
-		
-		cout<<word<<" "<<k<<" "<<" "<<wordNum<<" "<<"\n";
-		int j = checkWord(wordtoFind, word);
-		q++;
-		if(j == 0)
-		{
-			newStartPos = k;
-			endPos = k + wordtoFind.length();
-			break;
-		}		
-	}
-	writeSentence(sentence, "match.txt");
-	string moddedSentence = editSentence(newWord, sentence, newStartPos, endPos);
-	writeSentence(moddedSentence,"replace.txt");
-}
-
 string editSentence(string newWord, string sentence, int startPos, int endPos)
 {
 	string finalSentence;
@@ -306,7 +253,7 @@ string editSentence(string newWord, string sentence, int startPos, int endPos)
 string punctuationPurge(string sentence)
 {
 	string purgedSentence;
-	for(int k=0; k<sentence.length(); k++)
+	for(int k=0; k<sentence.length(); k++)writes
 	{
 		if((sentence[k]>64&&sentence[k]<91)||(sentence[k]>96&&sentence[k]<123)||sentence[k]==32)
 		{
@@ -335,17 +282,24 @@ void fullOperation()
 {
 	string sentence;
 	string wordtoFind;
-	string newWord;
 	string word;
 	int sentenceStart = 0;
 	int wordStart = 0;
 	int wordNum = 0;
 	int endPos = 0;
 	int newStartPos = 0;
+	string word1;
+	string word2;
+	string word3;
+	string word4;
+	string word5;
+	string word6;
+	string word7;
+	string word8;
 	sentence = readSentence(sentenceStart,46);
 	string purgedSentence = punctuationPurge(sentence);
 	string moddedSentence;
-	wordtoFind = readWord(wordStart);
+	readWord(word1,word2,word3,word4,word5,word6,word7,word8);
 	int q=0;
 	int b=0;
 	while(q<purgedSentence.length())
@@ -355,7 +309,7 @@ void fullOperation()
 			extractWord(purgedSentence, k, word, wordNum);
 		
 			cout<<word<<" "<<k<<" "<<" "<<wordNum<<" "<<"\n";
-			int j = checkWord(wordtoFind, word);
+			int j = checkWord(word1, word);
 			q++;
 			word="";
 			if(j == 0)
@@ -363,14 +317,17 @@ void fullOperation()
 				newStartPos = k;
 				endPos = k + wordtoFind.length();
 				writeSentence(sentence, "match.txt");
-				string moddedSentence = editSentence(newWord, sentence, newStartPos, endPos);
+				cout<<word2<<"\n";
+				string moddedSentence = editSentence(word2, sentence, newStartPos, endPos);
+				cout<<moddedSentence<<"\n";
+				writeSentence(moddedSentence, "replace.txt");
 				break;
 				
 			}		
 		}
+		break;
 		sentence = readSentence(sentenceStart,46);
 	}
-	writeSentence(moddedSentence,"replace.txt");
 }
 
 
