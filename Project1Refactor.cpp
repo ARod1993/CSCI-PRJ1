@@ -11,6 +11,7 @@ This program implements Project 1.
 
 using namespace std;
 
+//These five global constants are used for initializing streams.
 const char* WORDS = "words.txt";
 const char* SENTENCES = "sentences.txt";
 const char* MATCH = "match.txt";
@@ -26,12 +27,12 @@ string editSentence(string newWord, string sentence, int startPos, int endPos);
 void writeSentence(string sentence, const char* filename);
 int matchWord(string wordtoFind, string wordtoAdd, string sentence, int &startPos, int &endPos, int &wordNum);
 int matchAllWords(string wordtoFind, string sentence, int &startPos, int &endPos, int &wordNum);
-void MatchandReplace();
+void Match_Replace_allWords();
 void allWords();
 
 int main()
 {
-	MatchandReplace();
+	Match_Replace_allWords();
 }
 
 //This function compares two words that are passed to it; returning 0 if they are the same and 1 otherwise.
@@ -41,7 +42,6 @@ int checkWord(string toBeFound,string toBeChecked)
 	//This if block prevents words returning as equal if one word is a substring of the other.
 	if(toBeFound.length()!=toBeChecked.length())
 	{	
-		cout <<"The words are not the same.\n";
 		wordFlag++;
 		return 1;
 	}
@@ -68,12 +68,10 @@ int checkWord(string toBeFound,string toBeChecked)
 	}
 	if(wordFlag == 0)
 	{
-		cout <<"The words are the same.\n";
 		return 0;
 	}
 	else
 	{
-		cout <<"The words are not the same.\n";
 		return 1;
 	}
 }
@@ -89,19 +87,19 @@ string readSentence(int &sentenceStart, int &sentenceEnd, ifstream &sentenceText
 	sentenceText.open(SENTENCES);
 	if(sentenceText.fail())
 	{
-		cout<<"Sentence File could not be opened for reading. Please try again and check your filename.\n";
+		cout<<"Sentence File could not be opened for reading. Please try again and check your filename.\n"; //Error message output if the file doesn't open.
 	}
 	else
 	{
-		sentenceText.seekg(sentenceStart, sentenceText.beg);
+		sentenceText.seekg(sentenceStart, sentenceText.beg); //File pointer offset, so the function can keep track of where it is in the file as it reads.
 		while(sentenceText.get(c)&&c!=delimiter)
 		{
-			if(c>13||c==39)
+			if(c>13||c==39||(c>32&&c<64)) //Excludes whitespace, specifically includes punctuation;
 			{
 				sentence += c;
 				charCount++;
 			}
-			else
+			else //Converts non-space whitespace characters
 			{
 				sentence +=' ';
 				charCount++;
@@ -109,10 +107,7 @@ string readSentence(int &sentenceStart, int &sentenceEnd, ifstream &sentenceText
 		}
 		sentence+=char(delimiter);
 		charCount++;
-		cout <<sentence<<"\n";
-		cout <<charCount<<"\n";
 		sentenceEnd=sentenceStart +charCount;
-		cout<<sentenceEnd<<"\n";
 	}
 	sentenceText.close();
 	return sentence;
@@ -144,21 +139,20 @@ int extractWord(string sentence, string &output, int &wordStart, int&wordEnd, in
 	int charCount=0;
 	int index=wordStart;
 	string extractedWord;
-	while(sentence[index]!=32&&sentence[index]>14)
+	while(sentence[index]!=32&&sentence[index]>14) //This loop runs until a space or a special whitespace character is encountered.
 	{
 		extractedWord +=sentence[index];
 		index++;
 		charCount++;
 	}
 	wordEnd=wordStart+charCount;
-	cout<<wordEnd<<"\n";
 	output =extractedWord;
-	cout<<extractedWord<<"\n";
 	wordNum++;
-	return index;
+	return wordNum;
 }
 
-//This function reads the words from words.txt into the program.
+//This function reads the words from words.txt into the program. It can be this simple because we have a hard upper bound of eight words to read in. 
+//All words are passed by reference because we are not allowed to build a vector of words.
 void readWord(string &word1, string &word2, string &word3, string &word4, string &word5, string &word6, string &word7, string &word8)
 {
 	ifstream wordList;
@@ -174,16 +168,22 @@ void readWord(string &word1, string &word2, string &word3, string &word4, string
 	wordList.close();
 }
 
+//This function edits a sentence passed into by removing the chars with indices between startPos and endPos, inclusive and swapping newWord into the gap.
 string editSentence(string newWord, string sentence, int startPos, int endPos)
 {
 	string finalSentence;
+	//This for loop copies characters from sentence into the final sentence until startPos is reached.
 	for(int iter = 0; iter <startPos-1;iter++)
 	{
 		finalSentence+=sentence[iter];
-	};
+	}
+	
+	//These three lines add newWord into the sentence.
 	finalSentence += " ";
 	finalSentence += newWord;
 	finalSentence += " ";
+	
+	//This for loop copies characters from endPos onward to the end of sentence into finalSentence.
 	for(int iter = endPos; iter<sentence.length(); iter++)
 	{
 		finalSentence+=sentence[iter];
@@ -194,12 +194,13 @@ string editSentence(string newWord, string sentence, int startPos, int endPos)
 void writeSentence(string sentence, const char* filename)
 {
 	ofstream outputFile;
-	outputFile.open(filename,ios::app);
-	//This if block checks whether the first character in the sentence is lowercase, and recasts it as uppercase
+	outputFile.open(filename, ios::app);
+	//This if block checks whether the first character in the sentence is lowercase, and recasts it as uppercase.
 	if(96<sentence[0]&&sentence[0]<123) 
 	{
 		sentence[0]-=32;
 	}
+	//These lines write the sentence into the file.
 	outputFile << sentence;
 	outputFile << "\n";
 	outputFile.close();
@@ -210,51 +211,49 @@ where to cut and paste to swap the first word in "words.txt" for the second word
 */
 int matchWord(string wordtoFind, string wordtoAdd, string sentence, int &startPos, int &endPos, int &wordNum)
 {
-	cout<<sentence<<"\n";
 	string word;
 	int index = 0;
 	int matchFlag=0;
 	int wordFlag = 0;
 	int wordStart = 0;
 	int wordEnd = 0;
-	int j = 59049; //Random huge number used for debugging in DDD; this works on the assu
+	int j = 59049; //Random huge number used for debugging in DDD; this makes it easy to spot bugs if j isn't initialized properly.
 	string Sentence = sentence;
 	string purgedSentence;
 	string moddedSentence=sentence;
 	purgedSentence = punctuationPurge(sentence);
-	cout<<sentence<<" q "<<purgedSentence<<"\n";	
+	
+	//This while loop calls the extractWord function until extractWord runs out of words in the sentence.
 	while(wordEnd<purgedSentence.length())
 	{		
 		extractWord(purgedSentence, word, wordStart, wordEnd, wordNum);
 		
-		cout<<word<<" "<<wordNum<<" "<<" "<<matchFlag<<"\n";
-		j = checkWord(wordtoFind, word);
+		j = checkWord(wordtoFind, word);	//Checks the newly extracted word against the word we're looking for. If found, j returns zero.
 		if(j==0)
 		{
-			moddedSentence=editSentence(wordtoAdd, moddedSentence, wordStart, wordEnd);
+			moddedSentence=editSentence(wordtoAdd, moddedSentence, wordStart, wordEnd); //Edits a copy of the sentence to include the second word in words in lieu of the first.
 			matchFlag++;
 		}	
 		word ="";
 		wordStart=wordEnd+1;
 
 	}
-	cout<<j<<" "<<matchFlag<<"\n";
-	cout <<wordNum<<"  Sentence processed, thanks!\n";
+
 	if(matchFlag == 0)
 	{
-		cout<<"No matches.\n";
+
 	}
+	//This else block writes the sentence out to match and replace if there are matches found.
 	else
 	{
-		cout<<(matchFlag)<<" matches in sentence.\n";
-		cout<<sentence<<"\n";
 		writeSentence(Sentence, MATCH);
 		writeSentence(moddedSentence,REPLACE);
 	}
-	wordNum=0;
 	return matchFlag;
 }
 
+
+//This function is basically a modified version of matchWord above, with the replace functionality stripped out.
 int matchAllWords(string wordtoFind, string sentence, int &startPos, int &endPos, int &wordNum)
 {
 	string word;
@@ -263,15 +262,14 @@ int matchAllWords(string wordtoFind, string sentence, int &startPos, int &endPos
 	int wordFlag = 0;
 	int wordStart = 0;
 	int wordEnd = 0;
-	int j = 59049; //Random huge number used for debugging in DDD
+	int j = 59049; //Random huge number used for debugging in DDD; I set this high so that if j was not initialized correctly it would be obvious.
 	string purgedSentence;
 	string moddedSentence=sentence;
 	purgedSentence = punctuationPurge(sentence);	
-	while(wordEnd<purgedSentence.length())
+	while(wordEnd<purgedSentence.length()) //This is the same while loop as in matchWord.
 	{		
-		extractWord(purgedSentence, word, wordStart, wordEnd, wordNum);
+		wordNum=extractWord(purgedSentence, word, wordStart, wordEnd, wordNum);
 		
-		cout<<word<<" "<<wordNum<<" "<<" "<<matchFlag<<"\n";
 		j = checkWord(wordtoFind, word);
 		if(j==0)
 		{
@@ -279,15 +277,15 @@ int matchAllWords(string wordtoFind, string sentence, int &startPos, int &endPos
 			return matchFlag;
 		}	
 		word ="";
-		wordStart=wordEnd+1;
-		break;
-
+		wordStart=wordEnd+1; //Advances the beginning character by the word length
 	}
-	return matchFlag;
+	return matchFlag; //This value is returned because the allwords part of the project uses it to determine whether all words are found.
 }
 
-void MatchandReplace()
+//This function sequentially executes all of the steps in the project, beginning with match and replace and concluding with allwords.
+void Match_Replace_allWords()
 {
+	//variables are initialized here.
 	ifstream sentenceText;
 	int sentenceStart = 0;
 	int sentenceEnd = 0;
@@ -298,6 +296,10 @@ void MatchandReplace()
 	int matchFlag = 0;
 	int matchFlagAll = 0;
 	int wordNum = 0;
+	int maxLength = 0;
+	int secondLength = 0;
+	int allWordsCount = 0;
+	int goodSentenceNum = 0;
 
 	string word;
 	string wordToFind;
@@ -309,16 +311,36 @@ void MatchandReplace()
 	string word6;
 	string word7;
 	string word8;
-	readWord(word1,word2,word3,word4,word5,word6,word7,word8);
 	
-	while(!sentenceText.eof())
+	readWord(word1,word2,word3,word4,word5,word6,word7,word8); //Read in the words.
+	
+	while(!sentenceText.eof()) //This while loop works through the entire sentence file.
 	{
 		string sentence =readSentence(sentenceStart, sentenceEnd, sentenceText, 46);
 		string purgedSentence=punctuationPurge(sentence);
-		matchWord(word1, word2, purgedSentence, wordStart, wordEnd, wordNum);
-		matchFlag = 0;
-		sentenceStart=sentenceEnd+1;		
+		matchFlag+= matchWord(word1, word2, purgedSentence, wordStart, wordEnd, wordNum);
+		wordNum -= 1;
+		if(matchFlag!=0)
+		{
+			goodSentenceNum++;    //Counter of how many sentences with at least one hit have been found.
+			if(wordNum>maxLength)
+			{
+				maxLength=wordNum;
+			}
+			else if(wordNum>secondLength)
+			{
+				secondLength = wordNum;
+			}
+		}
+		wordNum=0;
+		matchFlag=0;
+		sentenceStart=sentenceEnd+1;		//Advances the read position of the file by the length of the sentence.
 	}
+	sentenceText.close();		//closes the filestream out.
+	cout<<goodSentenceNum<<" sentences that match the first word saved in file match.\n";
+	cout<<"The longest sentence matching the first word has "<<maxLength<<" words, and the second longest has "<<secondLength<<" words.\n";
+	
+	//This reinitializes all the relevant variables to their zero values to take a second pass through the file.
 	sentenceStart = 0;
 	sentenceEnd = 0;
 	wordStart=0;
@@ -326,15 +348,23 @@ void MatchandReplace()
 	charCount = 0;
 	comparisonFlag=1;
 	matchFlag = 0;
-	matchFlagAll = 0;
+	matchFlagAll = 0;	
 	wordNum = 0;
+	
+	sentenceText.open(SENTENCES);  //Reopens the filestream
+	
+	//The while loop below loops through all of the sentences in the stream, testing them against all eight words.
+		
 	while(!sentenceText.eof())
 	{
-		cout<<"running.\n";
 		string sentence =readSentence(sentenceStart, sentenceEnd, sentenceText, 46);
 		string purgedSentence=punctuationPurge(sentence);
 		matchFlagAll+=matchAllWords(word1, purgedSentence, wordStart, wordEnd, wordNum);
 		matchFlagAll+=matchAllWords(word2, purgedSentence, wordStart, wordEnd, wordNum);
+		
+		//Since the input file may have as few as two words, this section checks whether all eight words exist.
+		//It also ensures that sentences are not spuriously failed from allwords testing if there are only six words.
+		
 		if(word3 =="")
 		{
 			matchFlagAll++;
@@ -383,17 +413,16 @@ void MatchandReplace()
 		{
 			matchFlagAll+=matchAllWords(word8, purgedSentence, wordStart, wordEnd, wordNum);
 		}
+		//This checks to see if the sentence in question is flagged as containing all available words.
 		if(matchFlagAll==8)
 		{
 			writeSentence(sentence, ALLWORDS);
-		}
-		else
-		{
-			cout<<"Sentence not going in allWords.\n";
+			allWordsCount++; //count used for final cout.
 		}
 		matchFlagAll = 0;
-		sentenceStart=sentenceEnd+1;	
+		sentenceStart=sentenceEnd+1;	//Advances through the file by a sentence.
 	}
+	cout<<allWordsCount<<" sentences that match every word saved in file allwords.\n";
 }
 
 
